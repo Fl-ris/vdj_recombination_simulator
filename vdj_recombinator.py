@@ -16,8 +16,8 @@ heavy_chain = "STKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLS
 
 
 
-def file_reader():
-    with open("/home/floris/Documenten/Github/vdj_recomb/sequence_file.txt", "r") as seq_text:
+def file_reader(seq_file_path):
+    with open(seq_file_path, "r") as seq_text:
         seq_file = seq_text.read()
         return seq_file
 
@@ -69,7 +69,7 @@ def rss_finder(seq_file):
 
     #char_after_seq(seq_file, rss_regex_12bp_list[1], 20)
 
-    return rss_regex_12bp_9_7_list, rss_regex_12bp_7_9_list, rss_regex_23bp_9_7_list, rss_regex_23bp_7_9_list
+    return rss_regex_12bp_9_7_list, rss_regex_12bp_7_9_list, rss_regex_23bp_9_7_list, rss_regex_23bp_7_9_list, rss_regex_23bp_9_7, rss_regex_23bp_7_9
 
 def v_finder(seq_file, rss_regex_23bp_9_7_list, rss_regex_23bp_7_9_list):
     """
@@ -90,7 +90,7 @@ def v_finder(seq_file, rss_regex_23bp_9_7_list, rss_regex_23bp_7_9_list):
     start_to_23_rss = re.search(start_to_23_rss_motif, seq_file)
 
     #print(start_to_23_rss[1])
-    return start_to_23_rss, v_segment
+    return start_to_23_rss, v_segment, rand_rss_regex_23bp_9_7, rand_rss_regex_23bp_7_9
 
 
     
@@ -109,9 +109,11 @@ def d_finder(seq_file,  rss_regex_12bp_9_7_list, rss_regex_12bp_7_9_list):
 
             d_motif = f"{rand_rss_regex_12bp_9_7}(.*){rand_rss_regex_12bp_7_9}"
             d_segment = re.search(d_motif, seq_file)
-
+            
             print(f"D-segment: {d_segment[1]}")
+            d_segment = d_segment[1]
             found_valid_motif = True
+            
             return d_segment
         
         except:
@@ -120,19 +122,35 @@ def d_finder(seq_file,  rss_regex_12bp_9_7_list, rss_regex_12bp_7_9_list):
     print("Random gekozen motief kon niet matchen na 20 pogingen.")
             
         
+def j_finder(seq_file, rss_regex_23bp_9_7):
 
-def j_finder():
+    j_motif = f"{rss_regex_23bp_9_7}(.*){rss_regex_23bp_9_7}"
+
+    # To-do: verschil tussen findall() en search() opzoeken... 
+    j_segment_list = re.findall(j_motif, seq_file)
+    j_segment = random.choice(j_segment_list)
+    print(f"J-segment: {j_segment}")
+
+    return j_segment
+
+
+def d_j_combiner(d_segment, j_segment):
+    """
+    Combineer een willekeurig d segment met een willekeurig j segment.
+    """
+    dj_segment = d_segment + j_segment
+    print(f"DJ-segment: {dj_segment}")
+
+def dj_v_combiner(dj_segment, v_segment):
     pass
-
-
 
 
 def in_frame_check(sequence_position):
     """
     Stel vast of het verkergen segment wel in frame is ten opzichte van het start codon.
     De modulo wordt gebruikt zodat gekeken kan worden of de sequentie een meervoud van 3 (een codon) er van weg is. 
+    Return True als het in frame is en False als dat niet het geval is. 
     """
-
     return (sequence_position % 3 == 0)
 
 def stop_condon_check():
@@ -146,12 +164,18 @@ def print_resultaat():
 
 
 if __name__ == "__main__":
-    seq_file =  file_reader()
+    seq_file = file_reader("/home/floris/Documenten/Github/vdj_recomb/sequence_file.txt")
 
-    rss_regex_12bp_9_7_list, rss_regex_12bp_7_9_list, rss_regex_23bp_9_7_list, rss_regex_23bp_7_9_list = rss_finder(seq_file)
+    rss_regex_12bp_9_7_list, rss_regex_12bp_7_9_list, rss_regex_23bp_9_7_list, rss_regex_23bp_7_9_list, rss_regex_23bp_9_7, rss_regex_23bp_7_9 = rss_finder(seq_file)
 
-    start_to_23_rss, v_segment = v_finder(seq_file, rss_regex_23bp_9_7_list, rss_regex_23bp_7_9_list)
+    start_to_23_rss, v_segment, rand_rss_regex_23bp_9_7, rand_rss_regex_23bp_7_9 = v_finder(seq_file, rss_regex_23bp_9_7_list, rss_regex_23bp_7_9_list)
 
     d_segment = d_finder(seq_file, rss_regex_12bp_9_7_list, rss_regex_12bp_7_9_list)
+
+    j_segment = j_finder(seq_file, rss_regex_23bp_9_7)
+
+    dj_segment = d_j_combiner(d_segment, j_segment)
+
+    djv_segment = dj_v_combiner(dj_segment, v_segment)
 
     print(in_frame_check(2))
