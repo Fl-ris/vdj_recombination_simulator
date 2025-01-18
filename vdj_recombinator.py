@@ -1,50 +1,86 @@
 """
 VDJ-recombintie opdracht
 Autheur: Floris Menninga
-Datum: 5-01-2025
+Datum: 18-01-2025
+
+Om te kijken waar mijn regex'en matchen in de volledige sequence heb ik de volgende website gebruikt: https://regexr.com/
+
+
 
 """
 
+import re
+import random
 
 heavy_chain = "STKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKKVGERPAQGGRVSAGSQAQRSCLDASRLCSPSPGQQGRPRLPLHPEASARPTHAQGEG"
 
 
-def read_seq():
 
-    start_codon = "ATG"
-    stop_codons = ["TAA", "TAG", "TGA"]
-    seq_list = []
-    start_seq = 0
-    stop_seq = 0
-    with open("/home/floris/Documenten/vdj_recomb/sequence_file.txt") as seq_text:
-        for seq in seq_text: 
-            for locatie in range(0, len(seq), 3):
-                codon = seq[locatie:locatie + 3]
-                if codon in start_codon: # Als het een start codon is...
-                    start_seq += 1
-                    stop_seq == 0
-
-                if start_seq >= 0 and stop_seq != 1:
-                    seq_list.append(codon)
-                
-                if codon in stop_codons:
-                    stop_seq = 1
-                else:
-                    if stop_seq == 1:
-                     print("Nieuw gen...")
-
-                        
-
-        print(seq_list.join(list))
+def file_reader():
+    with open("/home/floris/Documenten/Github/vdj_recomb/sequence_file.txt", "r") as seq_text:
+        seq_file = seq_text.read()
+        return seq_file
 
 
+def char_after_seq(text_to_split,split, amount):
+    """
+    Functie om de sequentie te krijgen die achter een bekende sequentie zit. (Om bijvoorbeeld naar de V,D en J segmenten de zoeken aan de hand van RSS segmenten.)
+    split: waarachter moet de sequentie gehaald worden.
+    amount: hoeveel characters er na.
+    """
+    #seq_after = text_to_split.split(split)[amount]
+
+    start_index = text_to_split.find(split) + len(split)
+    seq_after = text_to_split[start_index:start_index+amount]  
+   # print(seq_after)
 
 
-def vdj_recombinatie(): 
+def rss_finder(seq_file):
+    """
+    Zoek sequenties die beginnen met "CACAGTG", een 23 nuc
+    """
+
+    # 12bp spacer
+    rss_regex_12bp = "GGTTTTTGT.{12}CACTGTG"
+
+    # 23bp spacer
+    rss_regex_23bp = "CACAGTG.{23}ACAAAAACC"
+
+
+    rss_regex_12bp_list = re.findall(rss_regex_12bp, seq_file)
+
+    rss_regex_23bp_list = re.findall(rss_regex_23bp, seq_file)
+
+    # print(f"Rss 23bp: {rss_regex_23bp_list} RSS 12bp: {rss_regex_12bp_list}")
+
+    char_after_seq(seq_file, rss_regex_12bp_list[1], 20)
+
+    return rss_regex_12bp_list, rss_regex_23bp_list
+
+def v_finder(rss_regex_12bp_list, rss_regex_23bp_list):
+
+    # ATG tot de 23bp RSS
+    start_to_23_rss = "(ATG.*)(CACAGTG.{23}ACAAAAACC)"
+
+
+
+
+
+    print(start_to_23_rss)
+
+
+    
+
+
     pass
 
+def d_finder(seq):
+    pass
 
-def pn_additie():
+def j_finder():
+    pass
+
+def in_frame_check():
     pass
 
 def stop_condon_check():
@@ -55,4 +91,7 @@ def print_resultaat():
 
 
 if __name__ == "__main__":
-    read_seq()
+    seq_file =  file_reader()
+    rss_regex_12bp_list, rss_regex_23bp_list = rss_finder(seq_file)
+
+  #  read_seq()
