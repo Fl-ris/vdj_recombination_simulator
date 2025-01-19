@@ -1,7 +1,7 @@
 """
-VDJ-recombintie opdracht
+VDJ-recombinatie opdracht
 Autheur: Floris Menninga
-Datum: 18-01-2025
+Datum: 19-01-2025
 
 Om te kijken waar mijn regex'en matchen in de volledige sequence heb ik de volgende website gebruikt: https://regexr.com/
 
@@ -14,7 +14,6 @@ import re
 import sys
 import random
 
-heavy_chain = "STKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKKVGERPAQGGRVSAGSQAQRSCLDASRLCSPSPGQQGRPRLPLHPEASARPTHAQGEG"
 
 
 
@@ -39,7 +38,7 @@ def char_after_seq(text_to_split,split, amount):
 
 def rss_finder(seq_file):
     """
-    Zoek sequenties die beginnen met "CACAGTG", een 23 nuc
+    Zoek sequenties die beginnen met "CACAGTG", een 23 nucleotide spacer en ACAAAAACC (voor 12bp heptameer-spacer-nonameer) en het zelfde voor de 23bp.
     """
 
     # 12bp spacer van nonameer naar heptameer <
@@ -133,7 +132,6 @@ def j_finder(seq_file, rss_regex_23bp_9_7):
 
     j_motif = f"{rss_regex_23bp_9_7}(.*){rss_regex_23bp_9_7}"
 
-    # To-do: verschil tussen findall() en search() opzoeken... 
     j_segment_list = re.findall(j_motif, seq_file)
     j_segment = random.choice(j_segment_list)
     print(f"J-segment: {j_segment}\n")
@@ -207,6 +205,8 @@ def dna_to_protein(dna_seq):
 
 def print_resultaat(protein_list, vdj_protein):
     start_p = "M" # Methionine
+    heavy_chain = "STKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKKVGERPAQGGRVSAGSQAQRSCLDASRLCSPSPGQQGRPRLPLHPEASARPTHAQGEG"
+
     
     
     for i in protein_list:
