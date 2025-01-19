@@ -5,16 +5,15 @@ Datum: 19-01-2025
 
 Om te kijken waar mijn regex'en matchen in de volledige sequence heb ik de volgende website gebruikt: https://regexr.com/
 
-Commandline gebruik: python vdj_recombinator.py pad_naar_sequence_file
-
+Commandline gebruik: python vdj_recombinator.py pad_naar_sequence_file aantal_eiwit_sequenties
+Voorbeeld: python /home/floris/Documenten/Github/vdj_recomb/vdj_recombinator.py "/home/floris/Documenten/Github/vdj_recomb/sequence_file.txt" 100
 
 """
+
 
 import re
 import sys
 import random
-
-
 
 
 def file_reader(seq_file_path):
@@ -23,6 +22,7 @@ def file_reader(seq_file_path):
         return seq_file
 
 
+# Niet gebruikte functie tot nu toe. 
 def char_after_seq(text_to_split,split, amount):
     """
     Functie om de sequentie te krijgen die achter een bekende sequentie zit. (Om bijvoorbeeld naar de V,D en J segmenten de zoeken aan de hand van RSS segmenten.)
@@ -67,11 +67,12 @@ def rss_finder(seq_file):
     rss_regex_23bp_7_9_list = re.findall(rss_regex_23bp_7_9, seq_file)
 
     #print(f"Rss 23bp: {rss_regex_12bp_9_7_list} RSS 12bp: ")
-
+    
 
     #char_after_seq(seq_file, rss_regex_12bp_list[1], 20)
 
     return rss_regex_12bp_9_7_list, rss_regex_12bp_7_9_list, rss_regex_23bp_9_7_list, rss_regex_23bp_7_9_list, rss_regex_23bp_9_7, rss_regex_23bp_7_9, rss_regex_12bp_7_9, rss_regex_12bp_9_7
+
 
 def v_finder(seq_file, rss_regex_23bp_9_7_list, rss_regex_23bp_7_9_list):
     """
@@ -81,22 +82,23 @@ def v_finder(seq_file, rss_regex_23bp_9_7_list, rss_regex_23bp_7_9_list):
     start_to_23_rss_motif = "(ATG.*)(CACAGTG.{23}ACAAAAACC)"
 
     # To-do: opzoeken of het wel ATG tot random 23bp RSS is of tot eerste 23bp RSS.
-
+    # To-do: Onderstaande random selectie gebruiken.
     rand_rss_regex_23bp_9_7 = random.choice(rss_regex_23bp_9_7_list)
     rand_rss_regex_23bp_7_9 = random.choice(rss_regex_23bp_7_9_list)
-    
-   # v_motif = "(CACAGTG.{23}ACAAAAACC).*(CACAGTG.{23}ACAAAAACC)"
-    v_motif = f"{rss_regex_23bp_7_9}(.*){rss_regex_23bp_7_9}"
-    v_segment = re.search(v_motif, seq_file)
-    v_segment = v_segment[1]
 
-    # Gebruik re.search i.p.v. findall omdat er anders een korte sequentie bij zit. (Voor onbekende reden)
-    start_to_23_rss = re.search(start_to_23_rss_motif, seq_file)
+
+   # v_motif = "(CACAGTG.{23}ACAAAAACC).*(CACAGTG.{23}ACAAAAACC)"
+   # v_motif = rand_rss_regex_23bp_7_9
+    v_motif = f"{rss_regex_23bp_7_9}(.*){rss_regex_23bp_7_9}"
+
+
+    v_segment = re.search(v_motif, seq_file)
+    v_segment = v_segment[0]
+
+    start_to_23_rss = re.findall(start_to_23_rss_motif, seq_file)
     
     print(f"V-segment: {v_segment}\n")
-    #print(start_to_23_rss[1])
     return start_to_23_rss, v_segment, rand_rss_regex_23bp_9_7, rand_rss_regex_23bp_7_9
-
 
     
 def d_finder(seq_file,  rss_regex_12bp_9_7_list, rss_regex_12bp_7_9_list):
@@ -155,6 +157,7 @@ def d_j_combiner(d_segment, j_segment):
     print(f"Geknipt dj-segment: {dj_segment_cut}\n")
     return dj_segment_cut
 
+
 def dj_v_combiner(dj_segment_cut, v_segment):
 
     # knip rss_regex_12bp_7_9 tot rss_regex_23bp_9_7
@@ -169,7 +172,6 @@ def dj_v_combiner(dj_segment_cut, v_segment):
     return djv_segment
 
 
-
 def in_frame_check(sequence_position):
     """
     Stel vast of het verkergen segment wel in frame is ten opzichte van het start codon.
@@ -179,13 +181,15 @@ def in_frame_check(sequence_position):
     return (sequence_position % 3 == 0)
 
 
-def stop_condon_check():
-    pass
+def stop_condon_check(prot_seq):
+    """
+    Telt het aantal stopcodons in de sequentie.
+    """
 
-
+     
 def dna_to_protein(dna_seq):
     """
-    Deze functie is afkomstig van het internet en zet DNA om naar eiwit.
+    Deze tabel is afkomstig van het internet en zet DNA direct om naar eiwit.
     """
 
     codon_table = {
@@ -209,20 +213,23 @@ def print_resultaat(protein_list, vdj_protein):
 
     
     
-    for i in protein_list:
-        protein_i = dna_to_protein(i)
-        vdj_gene = start_p + protein_i + heavy_chain
-        print(f"VDJ eiwit sequentie: {vdj_gene}\n")
+    for vdj_gene in protein_list:
+        
+        protein_vdj_gene = dna_to_protein(vdj_gene)
+        vdj_gene = start_p + protein_vdj_gene + heavy_chain
 
+        # Gebruik een list comprehension om het aantal stop codons te tellen. (Kan ook met for loop)
+        stop_condons = sum([i.count("_") for i in vdj_gene])
+        seq_lenght = len(vdj_gene)
+        print(f"VDJ eiwit sequentie: {vdj_gene}\n Aantal stopcodons: {stop_condons}\n Totale sequentie lengte: {seq_lenght}")
 
-    
 
 if __name__ == "__main__":
 
     protein_list = []
     
-    # Krijg 10 verschillende eiwit sequenties:
-    for i in range(10):
+    # Krijg zo veel verschillende eiwit sequenties als met het commandline argument aangegeven is.
+    for i in range(int(sys.argv[2])):
 
         seq_file = file_reader(sys.argv[1])
 
